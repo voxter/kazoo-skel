@@ -1,4 +1,10 @@
-* Overview
+/*                                                                                                                                                                                                                                                                                                 
+Section: Skel
+Title: Skel
+Language: en-US
+*/
+
+# Overview
 
 The Skel application serves as the barest of examples of creating a listener on
 the AMQP message bus, handling the JSON requests that come in, and responding
@@ -8,7 +14,7 @@ The example listener is for route requests, but the reader should know that
 several other requests exist, not limited to authentication, authorization, and
 other whapp-specific requests.
 
-** The Listener
+## The Listener
 
 Generally speaking, most action starts at the listener. The listener typically 
 builds on top of the gen_listener pattern (found in lib/whistle-1.0.0/src) to
@@ -23,11 +29,11 @@ The main areas of the listener that need editing are the bindings, responders,
 optional queue name, queue options, consume options, and QoS for initialization,
 and the handle_event/2 callback.
 
-*** Initialization
+### Initialization
 
 The full example first:
 
-#+begin_src erlang
+~~~
   gen_listener:start_link(?MODULE
                           ,[{bindings, [{api_module, [options]}
                                         ,{other_api_module, [options]}
@@ -41,9 +47,9 @@ The full example first:
                            ,{consume_options, []}
                            ,{basic_qos, 1}
                           ], []).
-#+end_src
+~~~                          
 
-**** Bindings
+#### Bindings
 
 The AMQP APIs available can be found in the modules in lib/whistle-1.0.0/api/
 (prefixed with wapi_) and define the bindings needed to receive AMQP payloads of
@@ -52,12 +58,12 @@ a certain type.
 For instance, to receive route requests, one would add the 'route' binding and
 payloads sent directly to our queue, one would configure the bindings list like:
 
-#+begin_src erlang
+~~~
   {bindings, [{route, []}
               ,{self, []}
              ]
   }
-#+end_src
+~~~
 
 These two 2-tuples will cause the gen_listener to call wapi_route:bind_q/2 and
 wapi_self:bind_q/2 with the listener's queue. When shutting down the listener,
@@ -69,7 +75,7 @@ instance, in lib/whistle-1.0.0/src/api/wapi_route.erl, one can see in the
 bind_q/2 function that one could specify a realm, which would restrict the route
 requests received by this listener to just the realm.
 
-**** Responders
+#### Responders
 
 Now that we've bound to all appropriate AMQP messages we want to consume, we
 need to tell the gen_listener behaviour what to do with them when received. To
@@ -81,9 +87,9 @@ with ("dialplan", "route_req") as the category/name. So we create a responder
 module skel_route_req.erl and define a handle_req/2 function. In the start_link
 parameters, we would inform gen_listener of this like so:
 
-#+begin_src erlang
+~~~
   {responders, [{{skel_route_req, handle_req}, [{<<"dialplan">>, <<"route_req">>}]}]}.
-#+end_src
+~~~  
 
 As you can see, the same callback can take more than one category/name pair. One
 could also create one callback module (skel_handlers, for instance) with a
@@ -94,11 +100,11 @@ use the <<"*">> to match any catgeory or name. So, if we expect multiple event
 names for the dialplan category, and we want to use the same handler for each,
 we could denote that like:
 
-#+begin_src erlang
+~~~
   {responders, [{{skel_handlers, handle_dialplan_req}, [{<<"dialplan">>, <<"*">>}]}]}
-#+end_src
+~~~
 
-**** The rest
+#### The rest
 
 queue_name: If you want an auto-generated, anonymous queue, you can omit the
 queue_name tuple, or set it to {queue_name, <<>>} (this is the default). If you
@@ -116,7 +122,7 @@ the queue will be managed (see basic_consume/2 in amqp_util.erl).
 basic_qos: Only needed if you need to control prefetch count from the queue to
 multiple consumers; otherwise omit from the list.
 
-*** handle_event/2
+### handle_event/2
 
 The one interaction with the AMQP payload the listener module has is with the
 handle_event/2 callback. Before calling into the handler module(s)' functions,
@@ -135,7 +141,7 @@ The ConfigList ++ [{queue_name, Name}, {server, pid()}] is passed as the second
 argument to the handler module(s)' functions (the first being the AMQP payload.
 
 
-** Other setup
+## Other setup
 
 Add the whapp directory name to whistle_apps/rebar.config to make sure it gets
 compiled by default when running 'rebar compile' from either the root or
